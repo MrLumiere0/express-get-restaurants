@@ -1,8 +1,9 @@
 const express = require("express");
 const app = express();
-const Restaurant = require("../models/index");
+const  Restaurant = require("../models/index");
 const db = require("../db/connection");
-const router = express.Router();
+app.use(express.json())
+app.use(express.urlencoded())
 
 //TODO: Create your GET Request Route Below:
 
@@ -11,32 +12,52 @@ app.get("/restaurants", async (req, res) => {
   res.json(restaurants);
 });
 
-app.get("/restaurants/:id", async (req, res) => {
+app.post("/restaurants/:id", async (req, res) => {
   const id = req.params.id;
   const restaurant = await Restaurant.findByPk(id);
   res.json(restaurant);
 });
 
-app.use(express.json());
-app.use(express.urlencoded());
 
-router.post("/:name/:location/:cuisine", async () => {
-  const restName = req.params.name;
-  const restLocation = req.params.location;
-  const restCuisine = req.params.cuisine;
+
+app.post("/restaurants",  async (req,res, next) => {
+  try {
+    await Restaurant.create(req.body)
+    res.status(201).json({message: "New Restaraunt Entry added!"})
+  }
+
+  catch(err) {
+    next (error)
+  }
+
+
+});
+
+
+app.put("/restaurants/:id", async (req,res) => {
 
   try{
+    await Restaurant.update(req.body, {
+      where: {id : req.params.id}
+    })
+    res.status(200)
+    }
 
-    const newREst = await Restaurant.create({
-      name: restName,
-      location: restLocation,
-      cuisine: restCuisine,
-    });
-  
+  catch (err)
+  {
+      res.status(404)
   }
-  
+})
 
-  req.send(newREst);
-});
+app.delete("/restaurants/:id", async(req,res) => {
+  try{
+      await Restaurant.destroy({where: {id: req.params.id}})
+      res.status(200).message("User Deleted!")
+  }
+  catch(err){
+      res.send(400)
+  }
+
+})
 
 module.exports = app;
